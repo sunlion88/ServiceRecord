@@ -1,12 +1,17 @@
 package com.sunlion.myservice;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
@@ -33,6 +38,10 @@ public class MyService extends Service {
     private byte[] audioData;
     private FileInputStream fileInputStream;
 
+    private NotificationManager notificationManager;
+    private static final String NOTIFICATION_ID = "channedId";
+    private static final String NOTIFICATION_NAME = "channedId";
+
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
@@ -42,6 +51,14 @@ public class MyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        //创建NotificationChannel
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_ID, NOTIFICATION_NAME, NotificationManager.IMPORTANCE_HIGH);
+            notificationManager.createNotificationChannel(channel);
+        }
+        startForeground(1,getNotification());
+
         Log.d(TAG,MyService.class.getName()+" onCreate");
         startRecord();
     }
@@ -62,7 +79,7 @@ public class MyService extends Service {
         final byte data[] = new byte[minBufferSize];
         final File file = new File(getExternalFilesDir(Environment.DIRECTORY_MUSIC),"Service_Record.pcm");
         if(!file.mkdir())
-            Log.e(TAG, "PCM File Directory already exist");
+            Log.d(TAG, "PCM File Directory already exist");
         if(file.exists())
             file.delete();
         audioRecord.startRecording();
@@ -124,10 +141,23 @@ public class MyService extends Service {
         File pcmFile = new File(getExternalFilesDir(Environment.DIRECTORY_MUSIC),"Service_Record.pcm");
         File wavFile = new File(getExternalFilesDir(Environment.DIRECTORY_MUSIC),"Service_Record.wav");
         if(!wavFile.mkdir())
-            Log.e(TAG, "WAV File Directory already exist");
+            Log.d(TAG, "WAV File Directory already exist");
         if(wavFile.exists())
             wavFile.delete();
         pcmToWavUtil.PcmToWav(pcmFile.getAbsolutePath(),wavFile.getAbsolutePath());
         Log.d(TAG,"StopRecord And PCM File To WAV File save "+wavFile.getAbsolutePath());
+    }
+
+    private Notification getNotification() {
+        Notification.Builder builder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.ic_launcher_background)
+                .setContentTitle("测试服务")
+                .setContentText("我正在运行");
+        //设置Notification的ChannelID,否则不能正常显示
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setChannelId(NOTIFICATION_ID);
+        }
+        Notification notification = builder.build();
+        return notification;
     }
 }

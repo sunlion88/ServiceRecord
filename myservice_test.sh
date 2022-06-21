@@ -1,13 +1,11 @@
 #!/system/bin/sh
-echo "=========MyService test Start========="
-T_INDEX=0
-T_COUNT=1
-while [ "$T_INDEX" -lt "$T_COUNT" ]
-do
-am startservice -n com.sunlion.myservice/.MyService
-sleep 120
+#./myserive_test.sh xxx(录制的时长)
+echo "=========Start Record Test========="
+Record_Time=$1
+am start-foreground-service -n com.sunlion.myservice/.MyService
+sleep $Record_Time
 am stopservice -n com.sunlion.myservice/.MyService
-sleep 2
-T_INDEX=$(($T_INDEX +1))
-echo "=========Run $T_INDEX times finish========="
-done
+echo "=========Record Stop========="
+echo "=========Total Record $Record_Time s========="
+
+ 
